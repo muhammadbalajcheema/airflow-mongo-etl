@@ -1,0 +1,51 @@
+version: '3.1'
+
+networks:
+  airflow-mongo-net:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_service
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - airflow-mongo-net
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express_service
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: adminpassword
+      ME_CONFIG_MONGODB_URL: mongodb://admin:adminpassword@mongodb:27017/
+    depends_on:
+      - mongodb
+    networks:
+      - airflow-mongo-net
+
+  webserver:
+    networks:
+      - airflow-mongo-net
+
+  scheduler:
+    networks:
+      - airflow-mongo-net
+
+  triggerer:
+    networks:
+      - airflow-mongo-net
